@@ -1,1 +1,1 @@
-web : gunicorn djangoAsia.wsgi
+web: gunicorn djangoAsia.wsgi
