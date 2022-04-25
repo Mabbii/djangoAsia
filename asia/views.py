@@ -3,7 +3,8 @@ from django.shortcuts import render, get_object_or_404, reverse
 from django.views import generic, View
 from django.http import HttpResponseRedirect
 from .models import Post
-from .forms import CommentForm
+from .forms import CommentForm, PostForm
+
 
 class PostList(generic.ListView):
     """PostList Model created from generic view"""
@@ -17,28 +18,29 @@ class PostDetail(View):
     """Post Detail class to show single post after clicking on it"""
 
     def get(self, request, slug, *args, **kwargs):
-        """function to get post"""
-        queryset = Post.objects.filter(status = 1)
-        post = get_object_or_404(queryset, slug = slug)
-        comments = post.comments.filter(approved = True).order_by('created_on')
+        """function to get specific post"""
+        queryset = Post.objects.filter(status=1)
+        post = get_object_or_404(queryset, slug=slug)
+        comments = post.comments.filter(approved=True).order_by('created_on')
         liked = False
-        if post.likes.filter(id = self.request.user.id).exists():
+        if post.likes.filter(id=self.request.user.id).exists():
             liked = True
 
-        return render(request, "post_detail.html",{
+        return render(request, "post_detail.html", {
             "post": post,
             "comments": comments,
             "commented": False,
             "liked": liked,
             "comment_form": CommentForm()
         },)
+
     def post(self, request, slug, *args, **kwargs):
-        """function to post form"""
-        queryset = Post.objects.filter(status = 1)
-        post = get_object_or_404(queryset, slug = slug)
-        comments = post.comments.filter(approved = True).order_by('created_on')
+        """function to post comment"""
+        queryset = Post.objects.filter(status=1)
+        post = get_object_or_404(queryset, slug=slug)
+        comments = post.comments.filter(approved=True).order_by('created_on')
         liked = False
-        if post.likes.filter(id = self.request.user.id).exists():
+        if post.likes.filter(id=self.request.user.id).exists():
             liked = True
 
         comment_form = CommentForm(data=request.POST)
@@ -52,13 +54,14 @@ class PostDetail(View):
         else:
             comment_form = CommentForm()
 
-        return render(request, "post_detail.html",{
+        return render(request, "post_detail.html", {
             "post": post,
             "comments": comments,
             "commented": True,
             "liked": liked,
             "comment_form": CommentForm()
         },)
+
 
 class PostLike(View):
     """PostLike Class View"""
@@ -71,3 +74,10 @@ class PostLike(View):
         else:
             post.likes.add(request.user)
         return HttpResponseRedirect(reverse('post_detail', args=[slug]))
+
+
+class AddPost(generic.CreateView):
+    """Create new Blog Post"""
+    model = Post
+    form_class = PostForm
+    template_name = 'add.html'
